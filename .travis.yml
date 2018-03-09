@@ -1,0 +1,54 @@
+sudo: required
+dist: trusty
+language: ruby
+
+before_install:
+- gem install asciidoctor -v 1.5.2
+- gem install tilt
+- sudo -H pip install git+https://github.com/gitenberg-dev/gitberg-build
+- sudo -H pip install git+https://github.com/gitenberg-dev/pg-epubmaker
+script:
+- VERSION=`ruby -e "require 'yaml'; meta = YAML.load_file('metadata.yaml'); puts meta['_version'];"`
+- git clone https://github.com/gitenberg-dev/asciidoctor-htmlbook.git
+- sudo -H pip install -r asciidoctor-htmlbook/gitberg-machine/requirements.txt
+
+- /usr/bin/python -c "from gitenberg import travis; travis.build_epub()"
+- ebook-convert book.epub book.mobi
+- xvfb-run ebook-convert book.epub book.pdf
+notifications:
+  webhooks:
+    urls:
+      - https://unglue.it/api/travisci/webhook
+    on_success: always
+    on_failure: never
+    on_start: never
+deploy:
+  skip_cleanup: true
+  provider: releases
+  api_key:
+    secure: aVSh8xfyA5lk4L82r/0Oz6CH9XYM91JICQjyzZl7nA5k66GvHYQbpUJnhIrLwIAD7ty5YDjWULXyHLayGolIezBHwHwKgzh3E838i9nUHd29OSQYE2FXBj8fvsA5H9owzeKwaFt91tc1kYWjCd7naFavcKIF+cZzWVm0nsFxB1z56azuhyiBXENBJHaGVmU4A4plWR1NI5OCgkwA/p/hs/8u+qUeVQKjXRVd45wKprd4z/8Hf3gcJxKtDgMqHNekrtbGOYywNMEzmOo8uNZabsw1GySJsHSgHePjJP6bWo22d6xl8xBmOveyypSw5wb014Vh8duY8IsCajdYu9Iw9MNLBRD6ZurDfyNgLSRg9NvB7d9+6iDWeTJxPjHHPcKjS3CJY2Gi6q5aTThqHNh/wsmwUXlN/gh8xDDShaxWaGAxINy/CJSmAAzrjtfslw1ImeMjKu1U1OUYXvVWAPd4LT2jDyTdyAMRHl+QqNQqB14YNBaShOWysMm1Lmd7C/rz1K4RhedQkzk3CM5tWmLpiV9j6hgtqeDMvtPylUzH2VLWjjlisEDijGlcZEf8znRASkVBrhqPrA4+nlGGaeggGJZ2WCZSVbB0HAEBJJZBlK04YUsSZ+GExZH8nyLWqkSL1jQSR+1LJbOzs/Di5aHD3EMNuBWcQ1LELwX93CJ7pG8=
+  file:
+    - book.epub
+    - book.mobi
+    - book.pdf
+  on:
+    repo: GITenberg/Wallenstein.-I.--of-2-_43931
+    tags: true
+addons:
+  apt:
+    packages:
+    - xsltproc
+    - xvfb
+    - calibre
+    - python-pip
+    - git
+    - python-dev
+    - libjpeg-dev
+    - libpng-dev
+    - libfreetype6
+    - libfreetype6-dev
+    - zlib1g-dev
+    - python-lxml
+    - libxml2-dev
+    - libxslt1-dev
+    - tidy
